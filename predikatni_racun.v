@@ -10,46 +10,61 @@ Require Import Omega.
 Theorem vaja_1:
   forall n : nat, exists m : nat, n < m.
 Proof.
-  intro n.
-  exists (S n). (* naslednik od n *)
+  (* naredimo na predavanjih *)
+  intro t.
+  exists (S t).
   omega.
 Qed.
 
 Theorem vaja_2 (n : nat): exists m : nat, n < m.
 Proof.
-  exists (1 + n).
-  omega.
+  (* naredimo na predavanjih *)
+  apply vaja_1.
 Qed.
 
 Theorem vaja_4 (n m : nat): 2 * n + m + 1 = m + n + 1 + n.
 Proof.
+  (* naredimo na predavanjih *)
   omega.
 Qed.
 
 Theorem vaja_5 (n : nat): (exists m : nat, n = 2 * m) \/ (exists m : nat, n = 1 + 2 * m).
 Proof.
+  (* naredimo na predavanjih *)
   induction n.
   - left.
-    exists 0 ; auto.
+    exists (0); auto.
   - destruct IHn.
     + right.
-      destruct H as [k G].
-      exists k.
-      omega.
+      destruct H.
+      exists (x); omega.
     + left.
-      destruct H as [k G].
-      exists (k + 1).
-      omega.
+      destruct H.
+      exists (x+1).
+      omega.    
 Qed.
 
 Theorem vaja_6: forall n, exists m, n = 3 * m \/ n = 3 * m + 1 \/ n = 3 * m + 2.
 Proof.
   (* naredimo na vajah *)
-  admit.
+  intro.
+  induction n.
+  - exists(0).
+    left.
+    auto.
+  - destruct IHn.
+    destruct H.
+    exists (x).
+    right;left;omega.
+    destruct H.
+    exists (x).
+    right;right;omega.
+    exists (x+1).
+    left;omega.
 Qed.
 
 (* Predpostavimo, da imamo množici A in B. *)
-Parameter A B : Set.
+Parameter A B : Set. 
 
 (* Predpostavimo, da imamo predikat P na A in  Q na B. *)
 Parameter P : A -> Prop.
@@ -58,6 +73,7 @@ Parameter Q : B -> Prop.
 Theorem vaja_7:
   forall y : B, (forall x : A , P x /\ Q y) -> (forall z : A, P z).
 Proof.
+  (* naredimo na predavanjih *)
   intros y H z.
   apply H.
 Qed.
@@ -69,14 +85,17 @@ Theorem vaja_8:
   (exists x : A, forall y : B, R x y) -> (forall y : B, exists x : A, R x y).
 Proof.
   (* naredimo na vajah *)
-  admit.
+  intros.
+  destruct H.
+  exists (x).
+  apply H.
 Qed.
 
 Theorem vaja_9:
   ~ (exists x : A, P x) <-> forall x : A, ~ P x.
 Proof.
   (* naredimo na vajah *)
-  admit.
+  intro.
 Qed.
 
 (* Zakon o izključeni tretji možnosti. 
@@ -94,18 +113,21 @@ Qed.
 
 Lemma vaja_11: dn -> lem.
 Proof.
-  unfold dn, lem.
+  (* naredimo na predavanjih *)
+  unfold dn,lem.
   intros D Q.
   apply D.
   intro G.
   absurd Q.
   - intro.
     apply G.
-    left ; assumption.
+    left.
+    apply H.
   - apply D.
-    intro L.
+    intro.
     apply G.
-    right ; assumption.
+    right.
+    assumption.
 Qed.
   
 Theorem vaja_12:
@@ -116,16 +138,16 @@ Proof.
 Qed.
 
 Theorem vaja_13:
-  dn -> ~ (forall x : A, ~ P x) -> exists x : A, P x.
+  dn -> (~ forall x : A, ~ P x) -> exists x : A, P x.
 Proof.
+  (* naredimo na predavanjih *)
   intros D H.
   apply D.
   intro G.
-  absurd (forall x : A, ~ P x).
+  absurd (forall x:A, ~ P x).
   - assumption.
-  - intros y K.
-    absurd (exists z : A, P z).
+  - intros x K.
+    absurd (exists y : A, P y).
     + assumption.
-    + exists y.
-      assumption.
+    + exists(x); assumption.  
 Qed.

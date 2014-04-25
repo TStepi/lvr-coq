@@ -70,27 +70,29 @@ Section RazneFunkcije.
   Definition vaja1_1 : A * B -> B * A :=
     fun (u : A * B) => (snd u, fst u).
                                   
-  Definition vaja1_2 : (A * B) * C -> A * (B * C).
-  Admitted.
+  Definition vaja1_2 : (A * B) * C -> A * (B * C) :=
+    fun (p : (A*B)*C) => (fst (fst p), (snd (fst p), snd p)).
 
-  Definition vaja1_3 : A -> (B -> A).
-  Admitted.
-
+  Definition vaja1_3 : A -> (B -> A):=
+    fun (a:A) => (fun(b:B) => a).
   
-  Definition vaja1_4 : (A -> B -> C) -> (A -> B) -> (A -> C).
-  Admitted.
+  Definition vaja1_4 : (A -> B -> C) -> (A -> B) -> (A -> C):=
+    fun (f: A -> B -> C) => (fun (g : A -> B) => (fun (a:A) => (f a) (g a))).
 
-  Definition vaja1_5 : (A * B -> C) -> (A -> (B -> C)).
-  Admitted.
+  Definition vaja1_5 : (A * B -> C) -> (A -> (B -> C)) :=
+    fun (f:A * B -> C) => fun (a:A) => fun(b:B) => f (a,b).
   
-  Definition vaja1_6 : (A -> (B -> C)) -> (A * B -> C).
-  Admitted.
+  
+  Definition vaja1_6 : (A -> (B -> C)) -> (A * B -> C) :=
+    fun (f : A -> (B -> C)) => (fun (p:A*B) => f (fst p) (snd p)).
 
-  Definition vaja1_7 : unit * A -> A.
-  Admitted.
+  Definition vaja1_7 : unit * A -> A :=
+    fun (p : unit*A) => snd p.
 
-  Definition vaja1_8 : A -> unit * A.
-  Admitted.
+  Definition vaja1_8 : A -> unit * A :=
+    fun (a:A) => (tt,a).
+
+Print vaja1_1.
 
 End RazneFunkcije.
 
@@ -108,14 +110,14 @@ Eval compute in @vaja1_1 nat bool (42, false).
 (** ** Izomorfni tipi
 
    Pravimo, da sta tipa [X] in [Y] izomorfna, če obstajata [f : X -> Y] in
-   [g : Y -> X], da velja [g (f x) = x] za vse [x : X] in [g (g y) = y] za vse [y : Y].
+   [g : Y -> X], da velja [g (f x) = x] za vse [x : X] in [f (g y) = y] za vse [y : Y].
 *)
 Definition iso (X : Type) (Y : Type) :=
   exists (f : X -> Y) (g : Y -> X),
     (forall x : X, g (f x) = x) /\ (forall y : Y, f (g y) = y).
 
 (** V Coqu lahko uvedemo prikladno notacijo za izomorfizem. *)
-Notation "X <~> Y" := (iso X Y) (at level 50).
+Notation "X <~> Y" := (iso X Y) (at level 100).
 
 Section Izomorfizmi1.
   (** Predpostavimo, da imamo tipe [A], [B] in [C]. *)
@@ -125,17 +127,34 @@ Section Izomorfizmi1.
 
   Lemma vaja2_1 : A * B <~> B * A.
   Proof.
-    admit.
+    unfold iso.
+    exists vaja1_1, vaja1_1.
+    unfold vaja1_1.
+    simpl.
+    tauto.
   Qed.
 
   Lemma vaja2_2 : (A * B) * C <~> A * (B * C).
   Proof.
-    admit.
+    unfold iso.
+    exists vaja1_2.
+    exists (fun (p : A*(B*C)) => ((fst p, fst (snd p)),snd (snd p))).
+    simpl.
+    tauto.
   Qed.
 
   Lemma vaja2_3 : unit * A <~> A.
   Proof.
-    admit.
+    unfold iso.
+    exists vaja1_7, vaja1_8.
+    split.
+    - intro.
+      destruct x.
+      simpl.
+      destruct u.
+      tauto.
+    - intro.
+      tauto.
   Qed.
 
   (** Pravimo, da sta funkciji [f g : X -> Y] _enaki po točkah_, če velja [forall x : X, f
@@ -148,17 +167,41 @@ Section Izomorfizmi1.
   (** S pomočjo ekstenzionalnosti lahko dokažemo nekatere izomorfizme. *)
   Lemma vaja2_4 (F : funext) : (A * B -> C) <~> (A -> (B -> C)).
   Proof.
-    admit.
+    unfold iso.
+    exists vaja1_5,vaja1_6.
+    split.
+    -  intro f.
+       apply F.
+       tauto.
+    - intro f.
+      apply F.
+      tauto.
   Qed.
 
   Lemma vaja2_5 (F : funext) : (unit -> A) <~> A.
   Proof.
-    admit.
+    unfold iso.
+    exists (fun (h : unit -> A) => h tt), ( fun (a:A)(_ : unit) => a ).
+    split.
+    - intro h.
+      apply F.
+      intros [].
+      reflexivity.
+    - tauto.
   Qed.
 
   Lemma vaja2_6 (F : funext) : (A -> unit) <~> unit.
   Proof.
-    admit.
+    unfold iso.
+    exists (fun (_: A-> unit) => tt), (fun (_:unit) => fun (_:A) => tt).
+    split.
+    - intro f.
+      apply F.
+      intro x.
+      destruct f.
+      reflexivity.
+    - intros [].
+      reflexivity.
   Qed.
 End Izomorfizmi1.
 
@@ -218,34 +261,58 @@ Section FunkcijeVsote.
   (** Predpostavimo, da imamo tipe [A], [B] in [C]. *)
   Context {A B C : Type}.
 
-  Definition vaja3_1 : (A + B -> C) -> (A -> C) * (B -> C).
-  Admitted.
+  Definition vaja3_1 : (A + B -> C) -> (A -> C) * (B -> C):=
+    fun (f : A+B -> C) => 
+       (fun (a:A) => f (inl a),
+        fun (b:B) => f (inr b)).
 
   (* S stavkom match obravnavmo element, ki je vsota tipov. *)
 
-  Definition vaja3_2 : A + B -> B + A.
-  Admitted.
+  Definition vaja3_2 : A + B -> B + A :=
+    fun u : A+B => 
+       match u with
+         | inl x => inr x
+         | inr y => inl y
+       end.
 
-  Definition vaja3_3 : (A + B) * C -> A * C + B * C.
-  Admitted.
+  Definition vaja3_3 : (A + B) * C -> A * C + B * C :=
+    fun p : (A+B)*C => match p with
+       | (inl a,c) => inl (a,c)
+       | (inr b,c) => inr (b,c)
+    end.
   
-  Definition vaja3_4 : A * C + B * C -> (A + B) * C.
-  Admitted.
+  Definition vaja3_4 : A * C + B * C -> (A + B) * C:=
+    fun (u : A*C + B*C) => match u with
+      | inl (a,c) => (inl a,c)
+      | inr (b,c) => (inr b,c)
+    end.
+  
 
-  Definition vaja3_5 : (A -> C) * (B -> C) -> (A + B -> C).
-  Admitted.
+  Definition vaja3_5 : (A -> C) * (B -> C) -> (A + B -> C):=
+    fun (p : (A-> C) * (B-> C)) => 
+        fun (u : A+B) => match u with
+          | inl a => (fst p) a
+          | inr b => (snd p) b
+        end.
 
-  Definition vaja3_6 : Empty_set -> A.
-  Admitted.
+  Definition vaja3_6 : Empty_set -> A :=
+    fun (t : Empty_set) => match t with end.
 
-  Definition vaja3_7 : Empty_set + A -> A.
-  Admitted.
+  Definition vaja3_7 : Empty_set + A -> A:=
+    fun (u : Empty_set +A) => match u with
+      | inl t => match t with end
+      | inr a => a
+    end.
 
-  Definition vaja3_8 : A -> ((A -> Empty_set) -> Empty_set).
-  Admitted.
+  Definition vaja3_8 : A -> ((A -> Empty_set) -> Empty_set) := 
+    fun (a :A ) => fun ( f: A -> Empty_set) => f a.
 
-  Definition vaja3_9 : A + (A -> Empty_set) -> (((A -> Empty_set) -> Empty_set) -> A).
-  Admitted.
+  Definition vaja3_9 : A + (A -> Empty_set) -> (((A -> Empty_set) -> Empty_set) -> A) := 
+    fun (u : A + (A -> Empty_set)) => 
+        fun (v : (A -> Empty_set) -> Empty_set ) => match u with
+          | inl a => a
+          | inr f => match (v f) with end
+        end.
 
 End FunkcijeVsote.
 
@@ -256,32 +323,73 @@ Section Izomorfizmi2.
 
   Definition vaja4_1 : A + B <~> B + A.
   Proof.
-    admit.
+    unfold iso.
+    exists vaja3_2,vaja3_2.
+    split.
+    - intro x.
+      tauto.
+    - intro y.
+      tauto.
   Qed.
 
   Definition vaja4_2 : (A + B) * C <~> A * C + B * C.
   Proof.
-    admit.
+    unfold iso.
+    exists vaja3_3,vaja3_4.
+    split.
+    - intro x.
+      tauto.
+    - intro y.
+      tauto.
   Qed.
 
-  Definition vaja4_3 : (A + B -> C) <~> (A -> C) * (B -> C).
+  Definition vaja4_3 (F:funext) : (A + B -> C) <~> (A -> C) * (B -> C).
   Proof.
-    admit.
+    unfold iso.
+    exists vaja3_1,vaja3_5.
+    split.
+    - intro x.
+      apply F.
+      intro y.
+      tauto.
+    - intro x.
+      tauto.
+      
   Qed.
 
   Definition vaja4_4 : Empty_set + A <~> A.
   Proof.
-    admit.
+    unfold iso.
+    exists vaja3_7, (fun (a:A) => inr a ).
+    tauto.
   Qed.
 
-  Definition vaja4_5 : (A -> Empty_set) <~> Empty_set.
+  Definition vaja4_5 (F:funext) (a:A): (A -> Empty_set) <~> Empty_set.
   Proof.
-    admit.
+    unfold iso.
+    exists  (fun (f:A -> Empty_set) => f a ).
+    exists  (fun (t:Empty_set) => match t with end).
+    split.
+    - intro x.
+      apply F.
+      intro y.
+      destruct x.
+    -  intro y.
+      tauto.
+    
   Qed.
 
-  Definition vaja5_5 : (Empty_set -> A) <~> unit.
+  Definition vaja5_5 (F:funext): (Empty_set -> A) <~> unit.
   Proof.
-    admit.
+    unfold iso.
+    exists (fun (f: Empty_set -> A) => tt).
+    exists (fun (x:unit) => fun(t:Empty_set) => match t with end).
+    split.
+    - intro x.
+      apply F.
+      tauto.
+    - intros [].
+      reflexivity.
   Qed.
 
 End Izomorfizmi2.
@@ -290,15 +398,15 @@ Section Zabava.
   (** Pa še neka vaj za zabavo. *)
   Context {A B : Type}.
 
-  (* Koliko funkcij A * B -> A + B lahko definiraš? *)  
+  (* Koliko funkcij A * B -> A + B lahko definiraš? dve *)  
   Definition vaja5_1_XX : A * B -> A + B.
   Admitted.
 
-  (* Koliko funkcij tipa (A * A) * A -> A * A lahko definiraš? *)
+  (* Koliko funkcij tipa (A * A) * A -> A * A lahko definiraš? šest*)
   Definition vaja5_2_XX : (A * A) * A -> A * A.
   Admitted.
 
-  (* Koliko funkcij tipa (A -> A) -> (A -> A) lahko definiraš? *)
+  (* Koliko funkcij tipa (A -> A) -> (A -> A) lahko definiraš? neskončno*)
   Definition vaja5_3_XX : (A -> A) -> (A -> A).
   Admitted.
 
