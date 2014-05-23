@@ -42,122 +42,26 @@ Proof.
               |
               |
               V
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-     Lenoba lena, malo bolj se potrudi!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    Lema, ki jo iščemo je [Rminus_ge]. O njej izvemo več z ukazom
-    [Check Rminus_ge.], ki pove:
-
-      Rminus_ge : forall r1 r2 : R, r1 - r2 >= 0 -> r1 >= r2
- *)
- apply Rminus_ge.
- (** Sedaj bi radi faktorizirali. To je najlažje narediti tako,
-     da Coq-u povemo, naj zamenja [x^2 + y^2 - 2 * x * y] s
-     kvadratom [(x - y)^2]. Če bi to naredili, bi se nam kasneje
-     zataknilo: v knjižnici je kvadrat realnega števila definiran
-     kot [Rsqr x]. Zato je bolje, da [Rsqr] uporabimo tudi mi.
-
-     Lahko pa bi tudi v knjižnici poiskali lemo [Rsqr_plus],
-     vendar tega zdaj ne bomo naredili, da vidimo, kako se dela
-     na roke.
- *)
-  replace (x^2 + y^2 - 2 * x * y) with (Rsqr (x - y)).
-  - (* Spet iščemo lemo, tokrat, da je kvadrat nenegativen.
-       Hitro najdemo
-
-         Lemma Rle_0_sqr : forall r, 0 <= Rsqr r. 
-
-       Na žalost gre v napačno smer, mi potrebujemo Rsqr r >= 0.
-       Najprej moramo svojo neenačbo obrniti. Torej potrebujemo
-       lemo, ki pravi [x <= y -> y >= x]. Spet malo pogledamo in
-       najdemo [Rle_ge]. *)
+    *)
+    apply Rminus_ge.
+    replace (x^2 + y^2 - 2 * x * y) with (Rsqr (x - y)).
     apply Rle_ge.
     apply Rle_0_sqr.
-    (* Kot vidimo, je vse skupaj ena nočna mora. Hej, bomo vsaj imeli dokaz z vsemi
-       podrobnostmi. *)
-    - (* Tu bi bilo najbolj logično, če bi uporabili poenostavljanje
-       izrazov. To se lahko v splošnem naredi s [simpl] in s [compute]. Za delo s
-       kolobarji (realna števila tvorijo kolobar, saj tvorijo obseg) imamo taktiki
-       [ring_simplify] in [ring]. Z nekaj poskušanja ugotovimo, da je pravo
-       zaporedje [compute] in [ring]. *)
-       compute.
-       ring.
+    compute.
+    ring.
 Qed.
+    
+    (*
+Naslednjo vajo naredite sami. Ideja: x^4 je treba napisati kot Rsqr (x^2). *)
 
-(** Naslednjo vajo naredite sami. Ideja: x^4 je treba napisati kot Rsqr (x^2). *)
 Theorem vaja_2 : forall x : R, 0 <= x^4.
 Proof.
-  admit.
+  intro.
+  replace (x^4) with (Rsqr (x^2)).
+  apply Rle_0_sqr.
+  compute.
+  ring.
+  
 Qed.
 
 (** Iskanje po spletnih straneh je lahko precej zamudno. V Coq-u lahko
@@ -183,19 +87,20 @@ Qed.
 Theorem vaja_3 (x : R) : 0 < Rsqr x -> x <> 0.
 Proof.
   (* Uporabi: SearchAbout Rsqr. *)
-  admit.
+  SearchAbout Rsqr.
+  apply Rsqr_gt_0_0.
 Qed.
 
 Theorem vaja_4 (x : R) : x < x + 1.
 Proof.
-  (* Uporabi: SearchPattern (?x < ?x + 1). *)
-  admit.
+  SearchPattern (?x < ?x + 1).
+  apply Rlt_plus_1.
 Qed.
 
 Theorem vaja_5 (x : R) : sin (2 * x) = 2 * sin x * cos x.
 Proof.
-  (* SearchAbout (sin (2 * ?x)). *)
-  admit.
+  SearchAbout (sin (2 * ?x)).
+  apply sin_2a.
 Qed.
 
 (** Tu je še nekaj bolj zanimivih vaj. Pomagajte si s [SearchAbout]

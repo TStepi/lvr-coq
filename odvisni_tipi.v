@@ -105,13 +105,18 @@ Section Vaje1.
   Lemma vaja_1 : forall n : nat, exists m : nat, n < m.
   Proof.
     (* predvanja *)
-    admit.
+    intro n.
+    exists (S n).
+    auto.
   Qed.
+
+  Print vaja_1.
 
   (** Zapišimo jo s tipi. Enak dokaz še vedno deluje. *)
   Lemma vaja1_2 : forall n : nat, { m : nat & n < m }.
   Proof.
     (* predavanja *)
+    intro n.
     admit.
   Qed.
 
@@ -130,7 +135,8 @@ Section Vaje1.
   Lemma vaja1_3 : forall n : nat, { m : nat & n < m }.
   Proof.
     (* predavanja *)
-    admit.
+    refine (fun n:nat => existT _ (S n) _).
+    auto.
   Defined.
 
 End Vaje1.
@@ -148,7 +154,11 @@ Section Frobenius.
     (exists a : A, Q /\ P a) -> Q /\ exists a : A, P a.
   Proof.
     (* predavanja *)
-    admit.
+    intros [a [H G]].
+    split.
+    - assumption.
+    - exists (a).
+      assumption.    
   Qed.
 
   (** Tipi (tu pišemo [(.....)%type], sicer Coq misli, da * pomeni množenje
@@ -157,21 +167,30 @@ Section Frobenius.
     ({ a : A & Q * P a } -> Q * { a : A & P a })%type.
   Proof.
     (* predavanja *)
-    admit.
+    intros [a [H G]].
+    split.
+    - assumption.
+    - exists (a).
+      assumption.
   Qed.
 
   (** Neposredna definicija *)
   Definition frobenius3 (A : Type) (P : A -> Type) (Q : Type) :
-    ({ a : A & Q * P a } -> Q * { a : A & P a })%type.
-  (* predavanja *)
-  Admitted.
+    ({ a : A & Q * P a } -> Q * { a : A & P a })%type 
+    :=
+    (fun p => (fst (projT2 p), existT _ (projT1 p) (snd (projT2 p)) ) ).
+  
 
   (** Za vajo naredi isto z obratno implikacijo. Najprej s taktikami: *)
   Theorem frobenius4 (A : Type) (P : A -> Prop) (Q : Prop) :
     (Q /\ exists a : A, P a) -> exists a : A, Q /\ P a.
   Proof.
     (* vaje *)
-    admit.
+    intro.
+    destruct H.
+    destruct H0.
+    exists (x).
+    auto.
   Qed.
 
   (** Preveri, ali isti dokaz delue tudi s tipi. *)
@@ -179,14 +198,20 @@ Section Frobenius.
     (Q * { a : A & P a } -> { a : A & Q * P a })%type.
   Proof.
     (* vaje *)
-    admit.
+    intro.
+    destruct X.
+    destruct s.
+    exists (x).
+    auto.
   Qed.
 
   (** Še neposredna konstrukcija. *)
   Definition frobenius6 (A : Type) (P : A -> Type) (Q : Type) :
-    (Q * { a : A & P a } -> { a : A & Q * P a })%type.
+    (Q * { a : A & P a } -> { a : A & Q * P a })%type
+    :=
+    (fun p => existT _ (projT1 (snd p)) ((fst p), projT2 (snd p))).
   (* vaje *)
-  Admitted.
+
 
 End Frobenius.
 
@@ -196,30 +221,32 @@ Section Vaje2.
     (forall (a : A) (b : B), P (a, b)) -> forall (b : B) (a : A), P (a, b).
   Proof.
     (* vaje *)
-    admit.
+    intros.
+    auto.
   Qed.
 
   (** Definiraj neposredno. *)
   Definition vaja2_2 (A B : Type) (P : A * B -> Prop) :
-    (forall (a : A) (b : B), P (a, b)) -> forall (b : B) (a : A), P (a, b).
-  (* vaje *)
-  Admitted.
+    (forall (a : A) (b : B), P (a, b)) -> forall (b : B) (a : A), P (a, b)
+    :=
+    (fun p => fun b a => p a b ).
+  
 
   (** Definiraj s taktikami. *)
   Definition vaja2_3 (A : Type) (P : A -> Type) (Q : forall (a : A), P a -> Type) :
     (forall (a : A) (p : P a), Q a p) ->
     (forall u : {a : A & P a}, Q (projT1 u) (projT2 u)).
   Proof.
-    (* vaje *)
-    admit.
+    intros.
+    auto.
   Defined.
 
   (** Definiraj neposredno. *)
   Definition vaja2_4 (A : Type) (P : A -> Type) (Q : forall (a : A), P a -> Type) :
     (forall (a : A) (p : P a), Q a p) ->
-    (forall u : {a : A & P a}, Q (projT1 u) (projT2 u)).
-  (* vaje *)
-  Admitted.
+    (forall u : {a : A & P a}, Q (projT1 u) (projT2 u))
+    :=
+    (fun f => fun u => f (projT1 u) (projT2 u)).
 End Vaje2.
 
 Section AksiomIzbire.
@@ -230,7 +257,9 @@ Section AksiomIzbire.
   Proof.
     refine (fun g => existT _ (fun a => projT1 (g a)) _).
     (* vaje *)
-    admit.
+    intro.
+    destruct g.
+    auto.
   Defined.
  
   (** Ali lahko dokažeš [izbira], če ga spremeniš v logično obliko? *)
@@ -238,7 +267,8 @@ Section AksiomIzbire.
     (forall (a : A), exists (b : B), P (a, b)) -> exists (f : A -> B), forall (a : A), P (a, f a).
   Proof.
     (* vaje *)
-    admit.
+    intros.
+    exists (fun a )
   Qed.
 
   (** Reši s taktikami. *)

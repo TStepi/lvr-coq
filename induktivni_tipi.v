@@ -63,6 +63,7 @@ Inductive seznam (A : Type) :=
       da je [x : A] in [l : seznam A].
 
     Tu je nekaj seznamov tipa [seznam bool]. *)
+Check seznam_rect.
 
 Check prazen bool. (* prazen seznam *)
 Check sestavi bool false (sestavi bool true (prazen bool)). (* seznam [false, true] *)
@@ -140,13 +141,12 @@ Eval compute in length (2 :: 4 :: 3 :: nil).
 
     [Definition] spremeni v [Fixpoint] ali pa uporabo [fix].
 *)
-Definition range : nat -> list nat.
-Admitted.
+Fixpoint range (n : nat) :=
+    match n with
+      | 0 => nil
+      | S(a) => a :: range(a)
+    end.
 
-(*
-  Fixpoint range (n : nat) :=
-    ???
-*)
 
 (** Naslednji izračun mora vrniti
     9 :: 8 :: 7 :: 6 :: 5 :: 4 :: 3 :: 2 :: 1 :: 0 :: nil *)
@@ -188,13 +188,11 @@ Eval compute in range 5 ++ range 7.
 
     Nato v standardni knjižnici poišči funkcijo, ki obrača sezname.
     Primerjaj definicijo. *)
-Definition obrni {A : Type} (lst : list A) : list A.
-Admitted.
-
-(* 
-  Fixpoint obrni {A : Type} (lst : list A) :=
-  ???
-*)
+Fixpoint obrni {A : Type} (lst : list A) :=
+  match lst with
+    | nil => nil
+    | x::temp => stakni (obrni temp) (x::nil)
+  end.
 
 
 (** Tole mora izračunati 5 :: 4 :: 3 :: 2 :: 1 :: nil *)
@@ -223,24 +221,27 @@ Proof.
     rewrite <- IHlst.
     reflexivity.
 Qed.
+(* ukaz congruence računa formule*)
 
 (** Z indukcijo pokažimo, da velja [rev (lst1 ++ lst2) = (rev lst2) ++ (rev lst1)]. *)
 Lemma rev_app (A : Type) (lst1 lst2 : list A) : rev (lst1 ++ lst2) = rev lst2 ++ rev lst1.
 Proof.
-  induction lst1.
+  induction lst1 ; simpl.
   - apply app_nil.
-  - simpl.
-    (* Menda obstaja lema, da je [app] asociativen. *)
+  - (* Menda obstaja lema, da je [app] asociativen. *)
     SearchAbout (?x ++ ?y ++ ?z).
     rewrite app_assoc.
     rewrite <- IHlst1.
     reflexivity.
 Qed.
-
 (** Z indukcijo dokaži, da je dvakrat obrnjeni seznam enak prvotnemu. *)
 Lemma rev_rev (A : Type) (lst : list A) : lst = rev (rev lst).
 Proof.
-  admit.
+  induction lst ; auto ; simpl.
+  SearchAbout rev.
+  rewrite rev_app.
+  rewrite <- IHlst.
+  auto.
 Qed.
 
 (** Obravnavajmo še dvojiška drevesa. *)
@@ -281,7 +282,12 @@ Require Import NPeano.
 (** Vaja. *)
 Lemma complete_depth (n : nat) : depth (complete n) = n.
 Proof.
-  admit.
+  induction n ; auto.
+  simpl.
+  rewrite IHn.
+  SearchAbout (max ?x ?x).
+  rewrite Max.max_idempotent.
+  auto.
 Qed.
 
 (** To naredimo skupaj na predavanjih. *)
@@ -307,19 +313,30 @@ Fixpoint flip (t : tree) :=
 (** Če obrnemo dvakrat, dobimo isto drevo. *)
 Lemma flip_idem (t : tree) : flip (flip t) = t.
 Proof.
-  admit.
+  induction t.
+  - auto.
+  - simpl.
+    congruence.    
 Qed.
 
 (** Obračanje ne spremeni velikosti. *)
 Lemma flip_size (t : tree) : size t = size (flip t).
 Proof.
-  admit.
+  induction t ; auto.
+  simpl.
+  rewrite <- IHt1 ; rewrite <- IHt2.
+  SearchAbout (?x + ?y = ?y + ?x).
+  rewrite plus_comm.
+  reflexivity.
 Qed.
 
 (** Obrnjeno polno drevo je spet polno drevo. *)
 Lemma flip_complete (n : nat) : complete n = flip (complete n).
 Proof.
-  admit.
+  induction n.
+  - auto.
+  - simpl.
+    congruence.
 Qed.
 
 (** Pri naslednji nalogah ne potrebuješ indukcije, ker so
@@ -329,15 +346,23 @@ Qed.
 (** Edino drevo globine 0 je prazno drevo. *)
 Lemma globina_0 (t : tree) : depth t = 0 -> t = empty.
 Proof.
-  admit.
+  intro.
+  destruct t ; auto.
+  simpl in H.
+  discriminate.
 Qed.
 
 (** Edino drevo globine 1 je [node empty empty]. *)
 Lemma globina_1 (t : tree) :
   depth t = 1 -> t = node empty empty.
 Proof.
-  admit.
+  intro H.
+  destruct t.
+  - simpl in H.
+    discriminate.
+  - destruct t1; destruct t2 ; simpl ;auto ; try discriminate.
 Qed.
+
 
 (** Obstajajo tri drevesa globine 2. *)
 Lemma globina_2 (t : tree) :
@@ -348,5 +373,10 @@ Lemma globina_2 (t : tree) :
 Proof.
   intro H.
   destruct t as [|t1 t2] ; try discriminate || auto.
-  admit.
+  simpl in H.
+  destruct t1; destruct t2; try discriminate.
+  - destruct t2_1; destruct t2_2; try discriminate || auto.
+  - destruct t1_1 ; destruct t1_2 ; discriminate || auto.
+  - destruct t1_1 ; destruct t1_2 ; destruct t2_1; destruct t2_2; try discriminate || auto.
+  
 Qed.
